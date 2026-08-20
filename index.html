@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Personal AI</title>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f2f4f7;
+        }
+
+        .app {
+            max-width: 600px;
+            margin: auto;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background: white;
+        }
+
+        .header {
+            background: #111827;
+            color: white;
+            padding: 18px;
+            text-align: center;
+            font-size: 22px;
+            font-weight: bold;
+        }
+
+        #chat {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+        }
+
+        .message {
+            padding: 10px 14px;
+            margin: 8px 0;
+            border-radius: 12px;
+            max-width: 80%;
+        }
+
+        .user {
+            background: #dbeafe;
+            margin-left: auto;
+        }
+
+        .bot {
+            background: #e5e7eb;
+            margin-right: auto;
+        }
+
+        .input-area {
+            display: flex;
+            padding: 10px;
+            border-top: 1px solid #ddd;
+            gap: 8px;
+        }
+
+        input {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            font-size: 16px;
+        }
+
+        button {
+            padding: 12px 15px;
+            border: none;
+            border-radius: 10px;
+            background: #111827;
+            color: white;
+            font-size: 16px;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="app">
+
+    <div class="header">
+        🤖 My Personal AI
+    </div>
+
+    <div id="chat">
+        <div class="message bot">
+            নমস্কার স্যার! আমি তোমার Personal AI Bot। 😊
+        </div>
+    </div>
+
+    <div class="input-area">
+        <input
+            type="text"
+            id="messageInput"
+            placeholder="এখানে লিখুন..."
+        >
+
+        <button onclick="sendMessage()">
+            Send
+        </button>
+    </div>
+
+</div>
+
+<script>
+
+function sendMessage() {
+
+    const input = document.getElementById("messageInput");
+    const message = input.value.trim();
+
+    if (message === "") {
+        return;
+    }
+
+    const chat = document.getElementById("chat");
+
+    // User message
+    const userMessage = document.createElement("div");
+    userMessage.className = "message user";
+    userMessage.innerText = message;
+
+    chat.appendChild(userMessage);
+
+    input.value = "";
+
+    // Temporary bot response
+    setTimeout(() => {
+
+        const botMessage = document.createElement("div");
+        botMessage.className = "message bot";
+
+        botMessage.innerText =
+            "তোমার মেসেজ আমি পেয়েছি। এখনো আমার AI Brain সংযুক্ত করা হয়নি।";
+
+        chat.appendChild(botMessage);
+
+        chat.scrollTop = chat.scrollHeight;
+
+    }, 500);
+}
+
+</script>
+
+</body>
+</html>
