@@ -6,17 +6,14 @@ const app = express();
 
 app.use(express.json());
 
-// Gemini AI
 const ai = new GoogleGenAI({
     apiKey: process.env.GEMINI_API_KEY
 });
 
-// index.html দেখাবে
 app.get("/", (req, res) => {
     res.sendFile(path.join(__dirname, "index.html"));
 });
 
-// AI Chat
 app.post("/chat", async (req, res) => {
     try {
         const message = req.body.message;
@@ -32,15 +29,19 @@ app.post("/chat", async (req, res) => {
             contents: message
         });
 
+        const reply = response.text;
+
         res.json({
-            reply: response.text
+            reply: reply
         });
 
     } catch (error) {
-        console.error("AI Error:", error);
+
+        console.error("GEMINI ERROR:", error);
 
         res.status(500).json({
-            error: "AI response failed"
+            error: "Gemini API Error",
+            details: error.message || "Unknown error"
         });
     }
 });
