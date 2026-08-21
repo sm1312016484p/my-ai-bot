@@ -3,33 +3,44 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My AI Bot</title>
+
+    <title>My Personal AI Bot</title>
 
     <style>
+        * {
+            box-sizing: border-box;
+        }
+
         body {
-            font-family: Arial, sans-serif;
             margin: 0;
-            background: #f2f2f2;
+            font-family: Arial, sans-serif;
+            background: #eef2f7;
         }
 
         .app {
-            max-width: 600px;
-            margin: auto;
+            max-width: 650px;
             height: 100vh;
+            margin: auto;
+            background: white;
             display: flex;
             flex-direction: column;
-            background: white;
         }
 
         header {
             background: #111827;
             color: white;
-            padding: 18px;
             text-align: center;
+            padding: 15px;
         }
 
         header h2 {
             margin: 0;
+        }
+
+        #status {
+            font-size: 13px;
+            color: #bbf7d0;
+            margin-top: 5px;
         }
 
         #chat {
@@ -39,26 +50,33 @@
         }
 
         .message {
-            padding: 10px 14px;
-            margin: 8px 0;
-            border-radius: 12px;
-            max-width: 80%;
-            word-wrap: break-word;
+            max-width: 85%;
+            padding: 11px 14px;
+            margin: 9px 0;
+            border-radius: 14px;
+            line-height: 1.5;
+            white-space: pre-wrap;
         }
 
         .user {
-            background: #dbeafe;
             margin-left: auto;
+            background: #dbeafe;
             text-align: right;
         }
 
         .bot {
-            background: #eeeeee;
             margin-right: auto;
+            background: #f1f5f9;
         }
 
-        .input-area {
+        .typing {
+            font-style: italic;
+            color: #666;
+        }
+
+        .controls {
             display: flex;
+            gap: 7px;
             padding: 10px;
             border-top: 1px solid #ddd;
         }
@@ -66,23 +84,48 @@
         #message {
             flex: 1;
             padding: 12px;
-            border: 1px solid #ccc;
-            border-radius: 8px;
+            border: 1px solid #bbb;
+            border-radius: 10px;
             font-size: 16px;
+            outline: none;
         }
 
         button {
-            margin-left: 8px;
-            padding: 12px 18px;
             border: none;
-            border-radius: 8px;
-            background: #2563eb;
-            color: white;
+            border-radius: 10px;
+            padding: 10px 13px;
             font-size: 16px;
+            cursor: pointer;
         }
 
-        button:disabled {
-            background: #999;
+        #send {
+            background: #2563eb;
+            color: white;
+        }
+
+        #mic {
+            background: #dc2626;
+            color: white;
+        }
+
+        #voice {
+            background: #16a34a;
+            color: white;
+        }
+
+        .bottom {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            background: #f8fafc;
+            border-top: 1px solid #ddd;
+            font-size: 13px;
+        }
+
+        select {
+            padding: 6px;
+            border-radius: 7px;
         }
     </style>
 </head>
@@ -92,17 +135,20 @@
 <div class="app">
 
     <header>
-        <h2>🤖 My AI Bot</h2>
-        <p>বাংলা + English AI Assistant</p>
+        <h2>🤖 My Personal AI Bot</h2>
+        <div id="status">● Online</div>
     </header>
 
     <div id="chat">
         <div class="message bot">
-            👋 হ্যালো! আমি তোমার Personal AI Bot। আমাকে কিছু জিজ্ঞেস করো।
+            👋 হ্যালো! আমি তোমার Personal AI Bot।
+
+            তুমি বাংলা অথবা English-এ লিখতে বা কথা বলতে পারো।
         </div>
     </div>
 
-    <div class="input-area">
+    <div class="controls">
+
         <input
             id="message"
             type="text"
@@ -110,7 +156,23 @@
             autocomplete="off"
         >
 
-        <button id="send">Send</button>
+        <button id="mic" title="Voice Command">🎙️</button>
+
+        <button id="send">➤</button>
+
+    </div>
+
+    <div class="bottom">
+
+        <select id="language">
+            <option value="bn-BD">বাংলা</option>
+            <option value="en-US">English</option>
+        </select>
+
+        <button id="voice" title="Voice Reply">
+            🔊 Voice
+        </button>
+
     </div>
 
 </div>
@@ -120,6 +182,11 @@
 const chat = document.getElementById("chat");
 const messageInput = document.getElementById("message");
 const sendButton = document.getElementById("send");
+const micButton = document.getElementById("mic");
+const voiceButton = document.getElementById("voice");
+const languageSelect = document.getElementById("language");
+
+let lastBotReply = "";
 
 function addMessage(text, type) {
 
@@ -132,6 +199,8 @@ function addMessage(text, type) {
     chat.appendChild(div);
 
     chat.scrollTop = chat.scrollHeight;
+
+    return div;
 }
 
 async function sendMessage() {
@@ -146,7 +215,7 @@ async function sendMessage() {
 
     sendButton.disabled = true;
 
-    addMessage("🤔 ভাবছি...", "bot");
+    const typing = addMessage("🤔 ভাবছি...", "bot typing");
 
     try {
 
@@ -166,27 +235,31 @@ async function sendMessage() {
 
         const data = await response.json();
 
-        chat.lastElementChild.remove();
+        typing.remove();
 
         if (data.reply) {
+
+            lastBotReply = data.reply;
 
             addMessage(data.reply, "bot");
 
         } else {
 
-            addMessage("দুঃখিত, উত্তর পাওয়া যায়নি।", "bot");
+            addMessage(
+                "❌ " + (data.details || "উত্তর পাওয়া যায়নি।"),
+                "bot"
+            );
 
         }
 
     } catch (error) {
 
-        chat.lastElementChild.remove();
+        typing.remove();
 
         addMessage(
             "❌ Server-এর সাথে যোগাযোগ করা যাচ্ছে না।",
             "bot"
         );
-
     }
 
     sendButton.disabled = false;
@@ -199,10 +272,107 @@ sendButton.addEventListener("click", sendMessage);
 messageInput.addEventListener("keydown", function(event) {
 
     if (event.key === "Enter") {
+        sendMessage();
+    }
+
+});
+
+
+/* 🎙️ Voice Command */
+
+const SpeechRecognition =
+    window.SpeechRecognition ||
+    window.webkitSpeechRecognition;
+
+let recognition = null;
+
+if (SpeechRecognition) {
+
+    recognition = new SpeechRecognition();
+
+    recognition.continuous = false;
+
+    recognition.interimResults = false;
+
+    recognition.lang = "bn-BD";
+
+    recognition.onstart = function() {
+
+        micButton.textContent = "🔴";
+
+    };
+
+    recognition.onend = function() {
+
+        micButton.textContent = "🎙️";
+
+    };
+
+    recognition.onresult = function(event) {
+
+        const text =
+            event.results[0][0].transcript;
+
+        messageInput.value = text;
 
         sendMessage();
+    };
 
+    micButton.addEventListener("click", function() {
+
+        recognition.lang =
+            languageSelect.value;
+
+        recognition.start();
+
+    });
+
+} else {
+
+    micButton.addEventListener("click", function() {
+
+        alert(
+            "এই browser-এ Voice Command support নেই। Chrome ব্যবহার করে চেষ্টা করুন।"
+        );
+
+    });
+
+}
+
+
+/* 🔊 Voice Reply */
+
+voiceButton.addEventListener("click", function() {
+
+    if (!lastBotReply) {
+
+        alert("আগে Bot-এর একটি উত্তর নিন।");
+
+        return;
     }
+
+    if (!("speechSynthesis" in window)) {
+
+        alert(
+            "এই browser-এ Voice Reply support নেই।"
+        );
+
+        return;
+    }
+
+    speechSynthesis.cancel();
+
+    const speech =
+        new SpeechSynthesisUtterance(lastBotReply);
+
+    speech.lang =
+        languageSelect.value;
+
+    speech.rate = 1;
+
+    speech.pitch = 1;
+
+    speechSynthesis.speak(speech);
 
 });
 
