@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Personal AI</title>
+    <title>My AI Bot</title>
 
     <style>
         body {
-            margin: 0;
             font-family: Arial, sans-serif;
-            background: #f2f4f7;
+            margin: 0;
+            background: #f2f2f2;
         }
 
         .app {
@@ -21,19 +21,21 @@
             background: white;
         }
 
-        .header {
+        header {
             background: #111827;
             color: white;
             padding: 18px;
             text-align: center;
-            font-size: 22px;
-            font-weight: bold;
+        }
+
+        header h2 {
+            margin: 0;
         }
 
         #chat {
             flex: 1;
-            padding: 15px;
             overflow-y: auto;
+            padding: 15px;
         }
 
         .message {
@@ -41,15 +43,17 @@
             margin: 8px 0;
             border-radius: 12px;
             max-width: 80%;
+            word-wrap: break-word;
         }
 
         .user {
             background: #dbeafe;
             margin-left: auto;
+            text-align: right;
         }
 
         .bot {
-            background: #e5e7eb;
+            background: #eeeeee;
             margin-right: auto;
         }
 
@@ -57,24 +61,28 @@
             display: flex;
             padding: 10px;
             border-top: 1px solid #ddd;
-            gap: 8px;
         }
 
-        input {
+        #message {
             flex: 1;
             padding: 12px;
             border: 1px solid #ccc;
-            border-radius: 10px;
+            border-radius: 8px;
             font-size: 16px;
         }
 
         button {
-            padding: 12px 15px;
+            margin-left: 8px;
+            padding: 12px 18px;
             border: none;
-            border-radius: 10px;
-            background: #111827;
+            border-radius: 8px;
+            background: #2563eb;
             color: white;
             font-size: 16px;
+        }
+
+        button:disabled {
+            background: #999;
         }
     </style>
 </head>
@@ -83,67 +91,120 @@
 
 <div class="app">
 
-    <div class="header">
-        🤖 My Personal AI
-    </div>
+    <header>
+        <h2>🤖 My AI Bot</h2>
+        <p>বাংলা + English AI Assistant</p>
+    </header>
 
     <div id="chat">
         <div class="message bot">
-            নমস্কার স্যার! আমি তোমার Personal AI Bot। 😊
+            👋 হ্যালো! আমি তোমার Personal AI Bot। আমাকে কিছু জিজ্ঞেস করো।
         </div>
     </div>
 
     <div class="input-area">
         <input
+            id="message"
             type="text"
-            id="messageInput"
-            placeholder="এখানে লিখুন..."
+            placeholder="এখানে প্রশ্ন লিখুন..."
+            autocomplete="off"
         >
 
-        <button onclick="sendMessage()">
-            Send
-        </button>
+        <button id="send">Send</button>
     </div>
 
 </div>
 
 <script>
 
-function sendMessage() {
+const chat = document.getElementById("chat");
+const messageInput = document.getElementById("message");
+const sendButton = document.getElementById("send");
 
-    const input = document.getElementById("messageInput");
-    const message = input.value.trim();
+function addMessage(text, type) {
 
-    if (message === "") {
-        return;
+    const div = document.createElement("div");
+
+    div.className = "message " + type;
+
+    div.textContent = text;
+
+    chat.appendChild(div);
+
+    chat.scrollTop = chat.scrollHeight;
+}
+
+async function sendMessage() {
+
+    const message = messageInput.value.trim();
+
+    if (!message) return;
+
+    addMessage(message, "user");
+
+    messageInput.value = "";
+
+    sendButton.disabled = true;
+
+    addMessage("🤔 ভাবছি...", "bot");
+
+    try {
+
+        const response = await fetch("/chat", {
+
+            method: "POST",
+
+            headers: {
+                "Content-Type": "application/json"
+            },
+
+            body: JSON.stringify({
+                message: message
+            })
+
+        });
+
+        const data = await response.json();
+
+        chat.lastElementChild.remove();
+
+        if (data.reply) {
+
+            addMessage(data.reply, "bot");
+
+        } else {
+
+            addMessage("দুঃখিত, উত্তর পাওয়া যায়নি।", "bot");
+
+        }
+
+    } catch (error) {
+
+        chat.lastElementChild.remove();
+
+        addMessage(
+            "❌ Server-এর সাথে যোগাযোগ করা যাচ্ছে না।",
+            "bot"
+        );
+
     }
 
-    const chat = document.getElementById("chat");
+    sendButton.disabled = false;
 
-    // User message
-    const userMessage = document.createElement("div");
-    userMessage.className = "message user";
-    userMessage.innerText = message;
-
-    chat.appendChild(userMessage);
-
-    input.value = "";
-
-    // Temporary bot response
-    setTimeout(() => {
-
-        const botMessage = document.createElement("div");
-        botMessage.className = "message bot";
-
-        botMessage.innerText =
-            "তোমার মেসেজ আমি পেয়েছি। এখনো আমার AI Brain সংযুক্ত করা হয়নি।";
-
-        chat.appendChild(botMessage);
-
-        chat.scrollTop = chat.scrollHeight;
-
-    }, 500);
+    messageInput.focus();
 }
+
+sendButton.addEventListener("click", sendMessage);
+
+messageInput.addEventListener("keydown", function(event) {
+
+    if (event.key === "Enter") {
+
+        sendMessage();
+
+    }
+
+});
 
 </script>
 
