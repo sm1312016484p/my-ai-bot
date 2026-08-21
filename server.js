@@ -1,17 +1,19 @@
 const express = require("express");
+const path = require("path");
 const { GoogleGenAI } = require("@google/genai");
 
 const app = express();
 
 app.use(express.json());
 
+// Gemini AI
 const ai = new GoogleGenAI({
     apiKey: process.env.GEMINI_API_KEY
 });
 
-// Home
+// index.html দেখাবে
 app.get("/", (req, res) => {
-    res.send("🤖 My Personal AI Bot is running!");
+    res.sendFile(path.join(__dirname, "index.html"));
 });
 
 // AI Chat
@@ -35,7 +37,7 @@ app.post("/chat", async (req, res) => {
         });
 
     } catch (error) {
-        console.error(error);
+        console.error("AI Error:", error);
 
         res.status(500).json({
             error: "AI response failed"
