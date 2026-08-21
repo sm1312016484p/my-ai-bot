@@ -6,14 +6,17 @@ const app = express();
 
 app.use(express.json());
 
+// Gemini AI
 const ai = new GoogleGenAI({
     apiKey: process.env.GEMINI_API_KEY
 });
 
+// Website
 app.get("/", (req, res) => {
     res.sendFile(path.join(__dirname, "index.html"));
 });
 
+// AI Chat + Web Search
 app.post("/chat", async (req, res) => {
     try {
         const message = req.body.message;
@@ -24,22 +27,49 @@ app.post("/chat", async (req, res) => {
             });
         }
 
+        // Personal commands
+        const lowerMessage = message.toLowerCase();
+
+        if (
+            lowerMessage === "hello bot" ||
+            lowerMessage === "হ্যালো বট"
+        ) {
+            return res.json({
+                reply: "হ্যালো! আমি তোমার Personal AI Bot। 😊"
+            });
+        }
+
+        if (
+            lowerMessage === "who are you" ||
+            lowerMessage === "তুমি কে"
+        ) {
+            return res.json({
+                reply: "আমি তোমার Personal AI Assistant। 🤖"
+            });
+        }
+
+        // Gemini + Google Search
         const response = await ai.models.generateContent({
-            model: "gemini-3.6-flash", contents: message
+            model: "gemini-3.6-flash",
+            contents: message,
+            config: {
+                tools: [
+                    {
+                        googleSearch: {}
+                    }
+                ]
+            }
         });
 
-        const reply = response.text;
-
         res.json({
-            reply: reply
+            reply: response.text
         });
 
     } catch (error) {
-
         console.error("GEMINI ERROR:", error);
 
         res.status(500).json({
-            error: "Gemini API Error",
+            error: "AI response failed",
             details: error.message || "Unknown error"
         });
     }
